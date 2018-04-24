@@ -13,31 +13,42 @@ class BenchmarkController(object):
         self.args = argparse_args
 
     def _load_benchmark_model(self, benchmark_name):
-        mod = importlib.import_module('models.' + benchmark_name)
+        mod = importlib.import_module('models.benchmarks' + benchmark_name)
         return mod.BenchmarkModelImplementation()
 
-    def _validate_benchmark_model(self, benchmark_name):
-        filename = 'models/' + benchmark_name + '.py'
+    def _load_machine_model(self, machine_type):
+        mod = importlib.import_module('models.machines' + machine_type)
+        return mod.MachineModelImplementation()
+
+    def _validate_model(self, model_name, model_type):
+        filename = 'models/'+ model_type + 's/' + model_name + '.py'
         if os.path.isfile(filename):
             raw = Path(filename).read_text()
-            if raw.find('class BenchmarkModelImplementation') == -1:
-                raise ImportError('Cannot find class BenchmarkModelImplementation in '
+            if model_type == 'benchmark':
+                if raw.find('class BenchmarkModelImplementation') == -1:
+                    raise ImportError('Cannot find class BenchmarkModelImplementation in '
                                   + filename)
-            else:
-                return self._load_benchmark_model(benchmark_name)
+                else:
+                    return self._load_benchmark_model(model_name)
+            elif model_type == 'machine':
+                if raw.find('class MachineModelImplementation') == -1:
+                    raise ImportError('Cannot find class MachineModelImplementation in '
+                                  + filename)
+                else:
+                    return self._load_machine_model(model_name)
         else:
             raise ImportError('Cannot find plugin ' + filename)
 
     def main(self):
         try:
-            self.model = self._validate_benchmark_model(self.args.name +
-                                                        '_model')
+            self.benchmark_model = self._validate_model(self.args.name +
+                                                        '_model', 'benchmark')
         except ImportError as err:
             print(err)
             self.parser.print_help()
 
-        print(self.model)
-        self.model.run_benchmark(self.args.benchmark_options, "prout")
+        print(self.benchmark_model)
+        self.benchmark_model.run_benchmark(self.args.benchmark_options, "prout")
 
         identity = str(args.name + '_' + args.compiler + '_' + args.compiler_flags.replace(" ", "") +
                '_' + args.machine_type + '_' + args.benchmark_options.replace(" ", "") +
