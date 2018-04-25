@@ -13,9 +13,12 @@ class BenchmarkModel(object):
         This entitles : installing dependencies, fetching the toolchain and
         the benchmark code in itself. Can use Ansible to do this platform
         independantly and idempotently"""
+        pass
 
     def build_benchmark(self, extra_compileflags, extra_linkflags, binary_name):
         """Builds the benchmark using the base + extra flags"""
+        pass
 
     def run_benchmark(self, extra_runflags, log_name):
         """Runs the benchmarks using the base + extra flags"""
+        pass

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from models.benchmark_model import BenchmarkModel
+from models.benchmarks.benchmark_model import BenchmarkModel
 
 class BenchmarkModelImplementation(BenchmarkModel):
     """This class is an implementation of the BenchmarkModel for LULESH"""
@@ -17,11 +17,11 @@ class BenchmarkModelImplementation(BenchmarkModel):
         the benchmark code in itself. Can use Ansible to do this platform
         independantly and idempotently"""
 
-    def build_benchmark(self, extra_compileflags, extra_linkflags, binary_name):
+    def build_benchmark(self, compiler, extra_compileflags, extra_linkflags, binary_name):
         """Builds the benchmark using the base + extra flags"""
         make_cmd = []
         make_cmd += 'make'
-#        make_cmd += 'CXX=' + self.compiler
+        make_cmd += 'CXX=' + compiler
         make_cmd += 'CXXFLAGS=' + self.base_compileflags + ' ' + extra_compileflags
         make_cmd += 'LDFLAGS=' + self.base_linkflags + ' ' + extra_linkflags
         make_cmd += 'LULESH_EXEC="' + binary_name + '"'

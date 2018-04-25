@@ -23,3 +23,13 @@ class CompilerModel(object):
                     else:
                         return False
             return False
+
+    def _fetch_dependencies(self):
+        pass
+
+    def _fetch_flags(self, compiling_mode):
+        pass
+
+    def main(self, compiling_mode):
+        self._fetch_dependencies()
+        return self._fetch_flags(compiling_mode)

@@ -6,6 +6,10 @@ import subprocess
 import re
 import importlib
 from pathlib import Path
+from helper.compiler_factory import CompilerFactory
+from models.compilers import CompilerModel
+from models.benchmarks import BenchmarkModel
+from models.machines import ManchineModel
 
 class BenchmarkController(object):
     def __init__(self, argparse_parser, argparse_args):
@@ -13,11 +17,11 @@ class BenchmarkController(object):
         self.args = argparse_args
 
     def _load_benchmark_model(self, benchmark_name):
-        mod = importlib.import_module('models.benchmarks' + benchmark_name)
+        mod = importlib.import_module('models.benchmarks.' + benchmark_name)
         return mod.BenchmarkModelImplementation()
 
     def _load_machine_model(self, machine_type):
-        mod = importlib.import_module('models.machines' + machine_type)
+        mod = importlib.import_module('models.machines.' + machine_type)
         return mod.MachineModelImplementation()
 
     def _validate_model(self, model_name, model_type):
@@ -40,6 +44,12 @@ class BenchmarkController(object):
             raise ImportError('Cannot find plugin ' + filename)
 
     def main(self):
+        subprocess.check_output(['mkdir', self.args.benchmark_root + self.args.name])
+        subprocess.check_output(['mkdir', self.args.benchmark_root + self.args.name +
+                                 '/compiler'])
+        subprocess.check_output(['mkdir', self.args.benchmark_root + self.args.name +
+                                 '/benchmark'])
+
         try:
             self.benchmark_model = self._validate_model(self.args.name +
                                                         '_model', 'benchmark')
@@ -48,6 +58,26 @@ class BenchmarkController(object):
             self.parser.print_help()
 
         print(self.benchmark_model)
+
+        try:
+            self.machine_model = self._validate_model(self.args.machine_type +
+                                                      '_model', 'machine')
+        except ImportError as err:
+            print(err)
+            self.parser.print_help()
+
+        compiler_factory = CompilerFactory(self.args.toolchain_url, self.args.benchmark_root +
+                                          self.args.name + '/benchmark/')
+
+        try:
+            self.compiler_model = compiler_factory.getCompiler()
+        except ImportError as err:
+            print(err)
+            self.parser.print_help()
+
+        self.compiler_model.main()
+        self.machine_model.main()
+
         self.benchmark_model.run_benchmark(self.args.benchmark_options, "prout")
 
         identity = str(args.name + '_' + args.compiler + '_' + args.compiler_flags.replace(" ", "") +
@@ -71,6 +101,9 @@ if __name__ == '__main__':
                     help='The compiler flags to use with compiler')
     parser.add_argument('--benchmark-options', type=str, default='',
                     help='The benchmark options to use with the benchmark')
+    parser.add_argument('--benchmark-root', type=str,
+                    help='The benchmark root directory where things will be \
+                        extracted and created')
     parser.add_argument('--build-number', type=str, required=True,
                     help='The number of the benchmark run this is')
     args = parser.parse_args()

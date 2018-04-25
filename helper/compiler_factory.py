@@ -35,7 +35,7 @@ class CompilerFactory(object):
                             return self._getCompilerFromBinaries(os.path.join(root,
                                                                    dirname))
                         else:
-                            raise FileNotFoundError('Are you sure this a correct toolchain ?')
+                            raise ImportError('Are you sure this a correct toolchain ?')
             return None
 
     def _validate_compiler_model(self, model_name):
