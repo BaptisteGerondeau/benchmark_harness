@@ -2,10 +2,11 @@
 
 import tarfile
 import os
+import re
 import importlib
 from urllib.request import urlretrieve
 from pathlib import Path
-from cd import cd
+from helper.cd import cd
 
 class CompilerFactory(object):
     def __init__(self, toolchain_url, toolchain_extractpath):
@@ -27,38 +28,47 @@ class CompilerFactory(object):
             return filename[0]
 
     def _fetchCompiler(self, extracted_tar):
+        original_path = os.getcwd()
         with cd(self.toolchain_extractpath):
             with cd(extracted_tar):
                 for root, dirnames,_ in os.walk('.'):
                     for dirname in dirnames:
                         if dirname == 'bin':
-                            return self._getCompilerFromBinaries(os.path.join(root,
-                                                                   dirname))
-                        else:
-                            raise ImportError('Are you sure this a correct toolchain ?')
-            return None
+                            with cd(original_path):
+                                return self._getCompilerFromBinaries(
+                                    os.path.join(self.toolchain_extractpath,
+                                                        extracted_tar, dirname))
+        raise ImportError('Frontend not found...')
+        return None
 
     def _validate_compiler_model(self, model_name):
         if os.path.isfile(model_name):
             raw = Path(model_name).read_text()
             if raw.find('class CompilerModelImplementation') == -1:
-                raise ImportError('Cannot find class CompilerModelImplementation in '
-                                  + model_name)
+                return False
             else:
-                return self._load_model(model_name)
+                return True
         else:
-            raise ImportError('Cannot find plugin ' + model_name)
+            raise ImportError('Bad Path ' + model_name)
 
-    def _load_model(self, model_name):
-        mod = importlib.import_module('models.compilers' + model_name)
+    def _load_model(self, model_name, original_path):
+        with cd(original_path):
+            model_name = re.sub("[*.py]", "", model_name)
+            mod = importlib.import_module('models.compilers.' + model_name)
         return mod.CompilerModelImplementation()
 
 
     def _getCompilerFromBinaries(self, bin_path):
-        list_compiler_modules = os.listdir('../models/compilers/')
+        original_path = os.getcwd()
+        list_compiler_modules = os.listdir('./models/compilers/')
         for model in list_compiler_modules:
-            if self._validate_compiler_model(model):
-                loaded_model = self._load_model(model)
-                if loaded_model.check(bin_path):
-                    return loaded_model
+            if model.find('_model') != -1:
+                if self._validate_compiler_model(os.path.join(os.getcwd(),
+                                                              'models/compilers/'
+                                                              + model)):
+                    loaded_model = self._load_model(model, original_path)
+                    if loaded_model.check(bin_path):
+                        return loaded_model
+        raise ImportError('No corresponding module found for toolchain @ ' +
+                          self.toolchain_url)
         return None

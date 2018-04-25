@@ -13,6 +13,8 @@ class CompilerModel(object):
         self.default_dependencies=[]
 
     def check(self, bin_path):
+        print('I AM CHECKING RIGHT NOW for %s with %s'%( self.frontend_name,
+              bin_path))
         if os.path.isdir(bin_path):
             for file in os.listdir(bin_path):
                 if file == self.frontend_name:
@@ -28,7 +30,7 @@ class CompilerModel(object):
         pass
 
     def _fetch_flags(self, compiling_mode):
-        pass
+        return self.default_flags
 
     def main(self, compiling_mode):
         self._fetch_dependencies()

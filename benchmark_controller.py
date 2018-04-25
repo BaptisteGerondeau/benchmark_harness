@@ -7,9 +7,9 @@ import re
 import importlib
 from pathlib import Path
 from helper.compiler_factory import CompilerFactory
-from models.compilers import CompilerModel
-from models.benchmarks import BenchmarkModel
-from models.machines import ManchineModel
+from models.compilers.compiler_model import CompilerModel
+from models.benchmarks.benchmark_model import BenchmarkModel
+from models.machines.machine_model import MachineModel
 
 class BenchmarkController(object):
     def __init__(self, argparse_parser, argparse_args):
@@ -57,8 +57,6 @@ class BenchmarkController(object):
             print(err)
             self.parser.print_help()
 
-        print(self.benchmark_model)
-
         try:
             self.machine_model = self._validate_model(self.args.machine_type +
                                                       '_model', 'machine')
@@ -75,12 +73,12 @@ class BenchmarkController(object):
             print(err)
             self.parser.print_help()
 
-        self.compiler_model.main()
+        self.compiler_model.main('DEFAULT')
         self.machine_model.main()
 
         self.benchmark_model.run_benchmark(self.args.benchmark_options, "prout")
 
-        identity = str(args.name + '_' + args.compiler + '_' + args.compiler_flags.replace(" ", "") +
+        identity = str(args.name + '_' + self.compiler_model.frontend_name + '_' + args.compiler_flags.replace(" ", "") +
                '_' + args.machine_type + '_' + args.benchmark_options.replace(" ", "") +
                '_' + args.build_number)
         execname = re.sub("[^a-zA-Z0-9_]+", "", identity).lower()
@@ -95,8 +93,8 @@ if __name__ == '__main__':
                     help='The name of the benchmark to be run')
     parser.add_argument('machine_type', type=str,
                     help='The type of the machine to run the benchmark on')
-    parser.add_argument('compiler', type=str,
-                    help='The compiler with which to compile the benchmark')
+    parser.add_argument('toolchain_url', type=str,
+                    help='The url of the toolchain with which to compile the benchmark')
     parser.add_argument('--compiler-flags', type=str, default='',
                     help='The compiler flags to use with compiler')
     parser.add_argument('--benchmark-options', type=str, default='',
