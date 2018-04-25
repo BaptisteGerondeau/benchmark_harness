@@ -3,4 +3,4 @@ from models.machines.machine_model import MachineModel
 
 class MachineModelImplementation(MachineModel):
     def __init__(self):
-        super()
+        super().__init__()

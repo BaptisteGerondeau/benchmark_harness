@@ -5,7 +5,7 @@ from models.benchmarks.benchmark_model import BenchmarkModel
 class BenchmarkModelImplementation(BenchmarkModel):
     """This class is an implementation of the BenchmarkModel for LULESH"""
     def __init__(self):
-        super()
+        super().__init__()
         self.base_runflags = ''
         self.base_compileflags = ''
         self.base_linkflags = ''
