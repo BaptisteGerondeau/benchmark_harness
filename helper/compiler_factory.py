@@ -8,6 +8,7 @@ from urllib.request import urlretrieve
 from pathlib import Path
 from helper.cd import cd
 
+
 class CompilerFactory(object):
     def __init__(self, toolchain_url, toolchain_extractpath):
         self.toolchain_url = toolchain_url
@@ -31,13 +32,13 @@ class CompilerFactory(object):
         original_path = os.getcwd()
         with cd(self.toolchain_extractpath):
             with cd(extracted_tar):
-                for root, dirnames,_ in os.walk('.'):
+                for root, dirnames, _ in os.walk('.'):
                     for dirname in dirnames:
                         if dirname == 'bin':
                             with cd(original_path):
                                 return self._getCompilerFromBinaries(
                                     os.path.join(self.toolchain_extractpath,
-                                                        extracted_tar, dirname))
+                                                 extracted_tar, dirname))
         raise ImportError('Frontend not found...')
         return None
 
@@ -57,7 +58,6 @@ class CompilerFactory(object):
             mod = importlib.import_module('models.compilers.' + model_name)
         return mod.CompilerModelImplementation()
 
-
     def _getCompilerFromBinaries(self, bin_path):
         original_path = os.getcwd()
         list_compiler_modules = os.listdir('./models/compilers/')
@@ -71,4 +71,3 @@ class CompilerFactory(object):
                         return loaded_model
         raise ImportError('No corresponding module found for toolchain @ ' +
                           self.toolchain_url)
-        return None
