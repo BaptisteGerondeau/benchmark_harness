@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import tarfile
 import os
@@ -7,6 +8,7 @@ import importlib
 from urllib.request import urlretrieve
 from pathlib import Path
 from helper.cd import cd
+from shutil import which
 
 
 class CompilerFactory(object):
@@ -15,8 +17,24 @@ class CompilerFactory(object):
         self.toolchain_extractpath = toolchain_extractpath
 
     def getCompiler(self):
-        extracted_tar = self._downloadToolchain()
-        return self._fetchCompiler(extracted_tar)
+        if self.toolchain_url.find('http') != -1 or self.toolchain_url.find('ftp') != -1:
+            extracted_tar = self._downloadToolchain()
+            return self._fetchCompiler(extracted_tar)
+        elif self.toolchain_url.find('g++') != -1:
+            return self._fetch_system('g++')
+        elif self.toolchain_url.find('gcc') != -1:
+            return self._fetch_system('gcc')
+        elif self.toolchain_url.find('clang') != -1:
+            return self._fetch_system('clang')
+        elif self.toolchain_url.find('clang++') != -1:
+            return self._fetch_system('clang++')
+
+    def _fetch_system(self, compiler):
+        compiler_path = which(compiler)
+        if compiler_path is not None:
+            return self._getCompilerFromBinaries(compiler_path)
+        else:
+            raise ImportError('Compiler %s not installed'% compiler)
 
     def _downloadToolchain(self):
         with cd(self.toolchain_extractpath):
@@ -26,6 +44,7 @@ class CompilerFactory(object):
             tarball.extractall()
             after = os.listdir()
             filename = [x for x in after if x not in before]
+            print(self.toolchain_extractpath)
             return filename[0]
 
     def _fetchCompiler(self, extracted_tar):

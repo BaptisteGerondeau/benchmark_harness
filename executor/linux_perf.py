@@ -12,7 +12,7 @@
          parsers.
 """
 
-import execute
+from executor.execute import *
 from pathlib import Path
 import os
 import shutil

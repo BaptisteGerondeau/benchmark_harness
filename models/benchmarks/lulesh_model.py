@@ -10,36 +10,40 @@ class BenchmarkModelImplementation(BenchmarkModel):
         super().__init__()
         self.name = 'lulesh'
         self.base_runflags = ''
-        self.base_compileflags = ''
-        self.base_linkflags = ''
+        self.base_compileflags = '-DUSE_MPI=0 -fopenmp'
+        self.base_linkflags = '-O3 -fopenmp'
         self.base_build_deps = ''
         self.base_run_deps = ''
-        self.benchmark_url = 'https://github.com/LLNL/LULESH.git'
+        self.benchmark_url = 'https://github.com/BaptisteGerondeau/LULESH.git'
 
     def prepare_build_benchmark(self, extra_deps):
         """Prepares Environment for building and running the benchmark
         This entitles : installing dependencies, fetching benchmark code
         Can use Ansible to do this platform independantly and idempotently"""
-        prepare_build_cmd = []
-        return prepare_build_cmd
+        prepare_cmds = []
+        prepare_run_cmd = ['git', 'clone', self.benchmark_url, self.name]
+        prepare_cmds.append(prepare_run_cmd)
+        return prepare_cmds
 
     def prepare_run_benchmark(self, extra_deps):
         """Prepares envrionment for running the benchmark
         This entitles : fetching the benchmark and preparing
         for running it"""
+        prepare_cmds = []
         prepare_run_cmd = []
-        return prepare_run_cmd
+        prepare_cmds.append(prepare_run_cmd)
+        return prepare_cmds
 
     def build_benchmark(self, compiler, complete_compile_flags, complete_link_flags, binary_name):
         """Builds the benchmark using the base + extra flags"""
         build_cmd = []
         make_cmd = []
-        make_cmd += 'make'
-        make_cmd += 'CXX=' + compiler
-        make_cmd += 'CXXFLAGS=' + complete_compile_flags
-        make_cmd += 'LDFLAGS=' + complete_link_flags
-        make_cmd += 'LULESH_EXEC="' + binary_name + '"'
-        build_cmd += make_cmd
+        make_cmd.append('make')
+        make_cmd.append('CXX=' + compiler)
+        make_cmd.append('CXXFLAGS=' + complete_compile_flags)
+        make_cmd.append('LDFLAGS=' + complete_link_flags)
+        make_cmd.append('LULESH_EXEC="' + binary_name + '"')
+        build_cmd.append(make_cmd)
         return build_cmd
 
     def run_benchmark(self, extra_runflags, log_name):

@@ -23,17 +23,17 @@ class BenchmarkController(object):
 
     def _make_unique_name(self):
         identity = str(
-            args.name +
+            self.args.name +
             '_' +
-            self.compiler_model.frontend_name +
+            (self.args.toolchain_url.rsplit('/', 1)[-1])[:24] +
             '_' +
-            args.compiler_flags.replace(
+            self.args.compiler_flags.replace(
                 " ",
                 "") +
             '_' +
-            args.machine_type +
+            self.args.machine_type +
             '_' +
-            args.benchmark_options.replace(
+            self.args.benchmark_options.replace(
                 " ",
                 ""))
         self.binary_name = re.sub("[^a-zA-Z0-9_]+", "", identity).lower()
@@ -47,11 +47,11 @@ class BenchmarkController(object):
             m_complete_build_flags, m_complete_link_flags = self.machine_model.main()
             b_complete_build_flags, b_complete_link_flags = self.benchmark_model.fetch_flags()
 
-            complete_build_flags = complete_build_flags + m_complete_build_flags + \
-                b_complete_build_flags + self.args.compiler_flags
+            complete_build_flags = complete_build_flags + ' ' + m_complete_build_flags + \
+                 ' ' +b_complete_build_flags +  ' ' + self.args.compiler_flags
 
-            complete_link_flags = complete_link_flags + m_complete_link_flags + \
-                b_complete_link_flags + self.args.link_flags
+            complete_link_flags = complete_link_flags +  ' ' +m_complete_link_flags + \
+                 ' ' +b_complete_link_flags +  ' ' +self.args.link_flags
 
             complete_build_flags, complete_link_flags = self.compiler_model.validate_flags(
                 complete_build_flags, complete_link_flags)
@@ -110,24 +110,27 @@ class BenchmarkController(object):
 
         unique_root_path = os.path.join(self.args.benchmark_root,
                                         self.binary_name)
-        compiler_path = os.path.join(unique_root_path, '/compiler/')
-        benchmark_path = os.path.join(unique_root_path, '/benchmark/')
-        results_path = os.path.join(unique_root_path, '/results/')
+        print(unique_root_path)
+        compiler_path = os.path.join(unique_root_path, 'compiler/')
+        print(compiler_path)
+        benchmark_path = os.path.join(unique_root_path, 'benchmark/')
+        results_path = os.path.join(unique_root_path, 'results/')
 
         run(['mkdir', unique_root_path])
         run(['mkdir', compiler_path])
         run(['mkdir', benchmark_path])
         run(['mkdir', results_path])
-
-        compiler_factory = CompilerFactory(self.args.toolchain_url, self.args.benchmark_root +
-                                           self.args.name + '/benchmark/')
-
+        print('Made dirs')
+        compiler_factory = CompilerFactory(self.args.toolchain_url,
+                                           compiler_path)
         try:
             self.benchmark_model = self._validate_model(self.args.name +
                                                         '_model', 'benchmark')
         except ImportError as err:
             print(err)
             self.parser.print_help()
+
+        print('Fetched Benchmark')
 
         try:
             self.machine_model = self._validate_model(self.args.machine_type +
@@ -136,16 +139,21 @@ class BenchmarkController(object):
             print(err)
             self.parser.print_help()
 
+        print('Fetched Machine')
+
         try:
             self.compiler_model = compiler_factory.getCompiler()
         except ImportError as err:
             print(err)
             self.parser.print_help()
 
+        print('Fetched Compiler')
+
         with cd(benchmark_path):
             for cmd in self.benchmark_model.prepare_build_benchmark(
                     self.args.benchmark_build_deps):
                 run(cmd)
+        print('Prepared for build')
 
         complete_build_flags, complete_link_flags = self._build_complete_flags()
 
@@ -154,17 +162,28 @@ class BenchmarkController(object):
                                                             complete_build_flags,
                                                             complete_link_flags,
                                                             self.binary_name):
-                run(cmd)  # Might be useful having a build parser here
+                print(cmd)
+                stdout, stderr = run(cmd)  # Might be useful having a build parser here
+                print('stdout' + stdout)
+                print('stderr' + stderr)
+
+            print('Benchmark built !!!')
 
             for cmd in self.benchmark_model.prepare_run_benchmark(
                     self.args.benchmark_run_deps):
                 run(cmd)
 
+            print('Ready for run, Commander')
+
             run_cmd = self.benchmark_model.run_benchmark(
                 self.args.benchmark_options)
 
+            print('Benchmark has been ran, Comrade')
+
             perf_parser = LinuxPerf(run_cmd)
             stdout, perf_results = perf_parser.stat()
+
+        print('The truth is out there')
 
         self._output_logs(stdout, perf_results)
 
