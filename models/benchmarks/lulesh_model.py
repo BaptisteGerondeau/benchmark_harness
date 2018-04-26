@@ -46,9 +46,10 @@ class BenchmarkModelImplementation(BenchmarkModel):
         build_cmd.append(make_cmd)
         return build_cmd
 
-    def run_benchmark(self, extra_runflags, log_name):
+    def run_benchmark(self, binary_name, extra_runflags):
         """Runs the benchmarks using the base + extra flags"""
-        print(self.benchmark_url, flush=True)
+        run_cmd = [binary_name, extra_runflags]
+        return run_cmd
 
 
 # if args.name.lower() in BENCHMARK_LIST:

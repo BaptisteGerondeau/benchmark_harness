@@ -33,6 +33,7 @@ class CompilerModel(object):
         if os.path.isfile(bin_path):
             output = subprocess.check_output([bin_path, '--version'])
             if output.decode('utf-8').find(self.version) != -1:
+                self.frontend_path = bin_path
                 return True
             else:
                 return False

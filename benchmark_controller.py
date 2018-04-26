@@ -171,11 +171,14 @@ class BenchmarkController(object):
 
             for cmd in self.benchmark_model.prepare_run_benchmark(
                     self.args.benchmark_run_deps):
-                run(cmd)
+                if cmd:
+                    run(cmd)
+                else:
+                    print('Nothing to prepare Comrade')
 
             print('Ready for run, Commander')
 
-            run_cmd = self.benchmark_model.run_benchmark(
+            run_cmd = self.benchmark_model.run_benchmark(self.binary_name,
                 self.args.benchmark_options)
 
             print('Benchmark has been ran, Comrade')
