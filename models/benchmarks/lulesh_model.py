@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from models.benchmarks.benchmark_model import BenchmarkModel
-
+import os
 
 class BenchmarkModelImplementation(BenchmarkModel):
     """This class is an implementation of the BenchmarkModel for LULESH"""
@@ -48,7 +48,8 @@ class BenchmarkModelImplementation(BenchmarkModel):
 
     def run_benchmark(self, binary_name, extra_runflags):
         """Runs the benchmarks using the base + extra flags"""
-        run_cmd = [binary_name, extra_runflags]
+        binary_path = os.path.join(os.getcwd(), binary_name)
+        run_cmd = [binary_path, extra_runflags]
         return run_cmd
 
 

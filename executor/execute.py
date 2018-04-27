@@ -10,6 +10,7 @@
 """
 
 import subprocess
+import re
 
 class OutputParser:
     """Base class for all output (out/err) parsers that will be passed
@@ -42,12 +43,6 @@ class OutputParser:
                 data[field] = self.sanitise(match.group(1))
 
         return data
-
-    def parse(output):
-        """Parses the output, returns a dictionary with information in
-           any format required (even hierarchical, if necessary) or
-           raises {Type|Value|Runtime}Error if anything bad happens"""
-        raise NotImplementedError()
 
 def run(program, outp=None, errp=None):
     """Execute Commands, return out/err, accepts parser plugins"""

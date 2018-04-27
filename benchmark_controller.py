@@ -68,7 +68,7 @@ class BenchmarkController(object):
             raise TypeError('%s should be a directory' % result_dir)
 
         with open(result_dir + '/benchmark_stdout.report', 'w') as stdout_d:
-            stdout_d.write(stdout.decode('utf-8'))
+            stdout_d.write(stdout)
 
         if isinstance(perf_results, dict):
             with open(result_dir + '/perf_parser_results.report', 'w') as perf_res_d:
@@ -180,12 +180,16 @@ class BenchmarkController(object):
 
             run_cmd = self.benchmark_model.run_benchmark(self.binary_name,
                 self.args.benchmark_options)
+            perf_command = ['/usr/bin/perf', 'stat']
+            perf_command.extend(run_cmd)
 
-            print('Benchmark has been ran, Comrade')
+            print('Benchmark is being ran, Comrade')
 
-            perf_parser = LinuxPerf(run_cmd)
-            stdout, perf_results = perf_parser.stat()
-
+          #  perf_parser = LinuxPerf(run_cmd)
+          #  stdout, perf_results = perf_parser.stat()
+            stdout, perf_results = run(run_cmd)
+            print(stdout)
+            print('stderr :' + stderr)
         print('The truth is out there')
 
         self._output_logs(stdout, perf_results)

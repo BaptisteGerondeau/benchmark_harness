@@ -44,20 +44,24 @@ class LinuxPerf:
             raise ValueError("Need program arguments to run perf")
         if plugin and not isinstance(plugin, OutputParser):
             raise TypeError("Output parser needs to derive from OutputParser")
+        if perf is not None:
+            # Special perf
+            self.perf = os.path.abspath(perf)
+        else:
+            # no perf supplied
+            self.perf = None
 
         self.program = program
         # external plugin, benchmark specific
         self.plugin = plugin
         # list of events
         self.events = list()
-        # Special perf
-        self.perf = os.path.abspath(perf)
         # Validate perf and permissions
-        _validate()
+        self._validate()
 
     def _validate(self):
         # Verify that perf is actually installed
-        if not self.perf:
+        if self.perf is None:
             self.perf = shutil.which('perf')
         if not Path(self.perf).exists():
             raise RuntimeError("Perf '" + self.perf + "' not available")
@@ -95,4 +99,4 @@ class LinuxPerf:
         call.extend(self.program)
 
         # Call and collect output
-        return execute.run(call, outp=plugin, errp=LinuxPerfParser)
+        return run(call, outp=self.plugin, errp=LinuxPerfParser())
