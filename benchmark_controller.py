@@ -79,6 +79,7 @@ class BenchmarkController(object):
             (self.args.toolchain.rsplit('/', 1)[-1])[:24],
             self.args.compiler_flags,
             self.args.run_flags,
+            self.args.benchmark_name,
             repr(self.args.unique_id)])
 
         # Clean up invalid chars
