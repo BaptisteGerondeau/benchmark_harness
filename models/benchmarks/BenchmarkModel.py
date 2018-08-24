@@ -28,7 +28,7 @@ class BenchmarkModel(object):
         self.checks = dict()
 
     ## CORE
-    def prepare(self, root_path, compiler, iterations, size):
+    def prepare(self, root_path, compiler, iterations, size, flags):
         """Prepares envrionment for running the benchmark
         This entitles : fetching the benchmark and preparing
         for running it"""
@@ -50,6 +50,8 @@ class BenchmarkModel(object):
             self.iterations = iterations
         if isinstance(size, int) and size > 0:
             self.size = size
+        if isinstance(flags, str):
+            self.flags = flags
 
     def build(self, binary_name, extra_compiler_flags, extra_linker_flags):
         all_compiler_flags = self.compiler_flags + " " + extra_compiler_flags
@@ -106,6 +108,7 @@ class BenchmarkModel(object):
 
         # Check required fields' values
         for key in self.checks:
+            print(key)
             if key not in results or not self.checks[key](results[key]):
                 return False
         return True

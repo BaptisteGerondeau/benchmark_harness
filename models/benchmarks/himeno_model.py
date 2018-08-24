@@ -47,8 +47,8 @@ class ModelImplementation(BenchmarkModel):
         # memory model on x86_64 (but not on AArch64)
         self.compiler_flags = '-mcmodel=large'
 
-    def prepare(self, root_path, compilers_dict, iterations, size):
-        super().prepare(root_path, compilers_dict, iterations, size)
+    def prepare(self, root_path, compilers_dict, iterations, size, flags):
+        super().prepare(root_path, compilers_dict, iterations, size, flags)
 
         # Himeno specific flags based on options
         # Validation will need more stable execution
@@ -77,8 +77,10 @@ class ModelImplementation(BenchmarkModel):
         # which causes a lot of precision issues with float types. Using double
         # also saves a few instructions on 64-bit machines, but halves the lanes
         # for vector instructions. Penalty is about 25% on average.
-        prepare_cmds.append(['sed', '-i', 's/float/double/g',
-                             os.path.join(self.root_path, 'himenoBMT.c')])
+        # Float or double ?
+        if '--force-double' in self.flags:
+            prepare_cmds.append(['sed', '-i', 's/float/double/g',
+                                os.path.join(self.root_path, 'himenoBMT.c')])
         return prepare_cmds
 
     def get_plugin(self):

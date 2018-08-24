@@ -232,7 +232,8 @@ class BenchmarkController(object):
         res = self._run_all(self.benchmark_model.prepare(self.benchmark_path,
                                                          compiler_dict,
                                                          self.args.iterations,
-                                                         self.args.size))
+                                                         self.args.size,
+                                                         self.args.benchmark_flags))
         self._check_results(res, public=True)
 
         self.logger.info(' ++ Building Benchmark ++')
@@ -294,6 +295,8 @@ if __name__ == '__main__':
                         help='The verbosity of logging output')
 
     # Extra flags
+    parser.add_argument('--benchmark-flags', type=str, default='',
+                        help='The extra compiler flags')
     parser.add_argument('--compiler-flags', type=str, default='',
                         help='The extra compiler flags')
     parser.add_argument('--linker-flags', type=str, default='',
