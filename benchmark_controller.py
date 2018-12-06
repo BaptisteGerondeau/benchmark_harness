@@ -145,7 +145,7 @@ class BenchmarkController(object):
 
         if ret != 0:
             msg = "Execution error"
-            if not public:
+            if public:
                 msg += " " + err
             raise RuntimeError(msg)
 
@@ -217,7 +217,12 @@ class BenchmarkController(object):
                                                          self.args.iterations,
                                                          self.args.size,
                                                          self.args.threads))
-        self._check_results(res, public=True)
+
+        try:
+            self._check_results(res, public=True)
+        except RuntimeError as err:
+            self.logger.error(err)
+            return 42
 
         self.logger.info(' ++ Building Benchmark ++')
         compiler_flags, linker_flags = self.compiler_model.get_flags()
@@ -227,12 +232,21 @@ class BenchmarkController(object):
             linker_flags += " " + self.args.linker_flags
         res = self._run_all(self.benchmark_model.build(compiler_flags,
                                                        linker_flags))
-        self._check_results(res, public=True)
+        try:
+            self._check_results(res, public=True)
+        except RuntimeError as err:
+            self.logger.error(err)
+            return 42
 
         self.logger.info(' ++ Running Benchmark ++')
         res = self._run_all(self.benchmark_model.run(self.args.run_flags),
-                               perf=True)
-        self._check_results(res, public=False)
+                            perf=True)
+
+        try:
+            self._check_results(res, public=False)
+        except RuntimeError as err:
+            self.logger.error(err)
+            return 42
 
         self.logger.info(' ++ Validating Results ++')
         valid = self._validate(res)
