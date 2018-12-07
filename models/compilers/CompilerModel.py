@@ -11,9 +11,10 @@ class CompilerModel(object):
     def __init__(self):
         self.name = ''
         self.version = ''
-        self.cxx_name = ''
         self.cc_name = ''
-        self.fc_name = ''
+        self.cxx_pattern = ''
+        self.cc_pattern = ''
+        self.fc_pattern = ''
         self.default_compiler_flags = ''
         self.default_link_flags = ''
 
@@ -39,7 +40,6 @@ class CompilerModel(object):
             return False
 
     def _check_binary(self, path):
-
         if not path or \
            not os.path.isfile(path) or \
            not os.access(path, os.X_OK):
@@ -52,22 +52,41 @@ class CompilerModel(object):
         else:
             return False
 
-    def check(self, bin_path):
+    def check(self, bin_path, pattern=None):
+        if pattern is None:
+            pattern = self.cc_pattern
         if os.path.isdir(bin_path):
-            for file in os.listdir(bin_path):
-                if file == self.cc_name:
-                    return self._check_binary(os.path.join(bin_path, file))
+            binary = self._look_for_binary(bin_path, pattern)
+            if binary is not None:
+                return self._check_binary(os.path.join(bin_path, binary))
             return False
         elif os.path.isfile(bin_path):
             return self._check_binary(bin_path)
         else:
             return False
 
+    def _look_for_binary(self, bin_path, bin_pattern):
+        pattern = re.compile(bin_pattern)
+        for file in os.listdir(bin_path):
+            if pattern.fullmatch(file) is not None:
+                return pattern.fullmatch(file).group(0)
+        return None
+
+    def _look_for_compilers(self, bin_path, compiler_pattern):
+        if self._look_for_binary(self.compilers_path, compiler_pattern) is not None:
+            return os.path.join(self.compilers_path, self._look_for_binary(self.compilers_path,
+                                                                           compiler_pattern))
+        else:
+            return 'Not Found'
+
     def get_env(self):
         return {
-            'cxx': os.path.join(self.compilers_path, self.cxx_name),
-            'cc': os.path.join(self.compilers_path, self.cc_name),
-            'fc': os.path.join(self.compilers_path, self.fc_name),
+            'cxx': self._look_for_compilers(self.compilers_path,
+                                            self.cxx_pattern),
+            'cc': self._look_for_compilers(self.compilers_path,
+                                           self.cc_pattern),
+            'fc': self._look_for_compilers(self.compilers_path,
+                                           self.fc_pattern),
             'lib': os.path.realpath(os.path.join(self.compilers_path, '../lib'))
         }
 
